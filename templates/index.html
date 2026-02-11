@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neonexus First Responder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* === COLOR VARIABLES === */
+        :root {
+            --primary-blue: #0d47a1;       /* Dark blue */
+            --secondary-blue: #1976d2;      /* Medium blue */
+            --accent-blue: #42a5f5;         /* Light blue */
+            --light-blue: #bbdefb;          /* Very light blue */
+            --background-blue: #e3f2fd;     /* Background blue */
+            --text-dark: #1a237e;           /* Dark text */
+            --text-light: #ffffff;          /* White text */
+            --success-green: #2e7d32;       /* Green for success */
+            --warning-orange: #f57c00;      /* Orange for warnings */
+            --danger-red: #c62828;          /* Red for danger */
+            --panel-bg: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+        }
+        
+        /* === BASE STYLES === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--background-blue) 0%, #bbdefb 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
+            padding: 15px;
+        }
+        
+        /* === SIMPLE HEADER STYLES === */
+        .header {
+            background: var(--primary-blue);
+            padding: 18px 25px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(13, 71, 161, 0.3);
+        }
+        
+        .header h1 {
+            font-size: 1.7rem;
+            font-weight: 500;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            letter-spacing: 0.5px;
+        }
+        
+        /* === MAIN DASHBOARD LAYOUT === */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 320px 1fr 320px;
+            gap: 18px;
+            height: calc(100vh - 110px);
+            overflow: hidden;
+        }
+        
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .camera-panel, .chat-panel, .guide-panel {
+                height: 400px;
+            }
+        }
+        
+        /* === PANEL COMMON STYLES === */
+        .camera-panel, .chat-panel, .guide-panel {
+            background: var(--panel-bg);
+            border-radius: 12px;
+            border: 1px solid var(--light-blue);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(13, 71, 161, 0.1);
+        }
+        
+        /* === PANEL HEADERS === */
+        .camera-header, .chat-header, .guide-header {
+            padding: 16px 20px;
+            border-bottom: 2px solid var(--light-blue);
+            background: linear-gradient(to right, var(--primary-blue), var(--secondary-blue));
+        }
+        
+        .camera-header h3, .chat-header h3, .guide-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* === LEFT PANEL: CAMERA FEED === */
+        .camera-feed {
+            flex: 1;
+            background: var(--text-dark);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .camera-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            color: var(--light-blue);
+        }
+        
+        .camera-placeholder i {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.8;
+        }
+        
+        .close-camera {
+            background: var(--danger-red);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .close-camera:hover {
+            background: #b71c1c;
+            transform: scale(1.05);
+        }
+        
+        /* === CENTER PANEL: CHAT === */
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: linear-gradient(to bottom, #fafafa, #f5f5f5);
+        }
+        
+        .message-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .user-message, .system-message {
+            padding: 14px 18px;
+            border-radius: 12px;
+            max-width: 85%;
+            word-wrap: break-word;
+            line-height: 1.5;
+            animation: messageAppear 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--primary-blue) 100%);
+            color: var(--text-light);
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .system-message {
+            background: white;
+            color: var(--text-dark);
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+            border-left: 4px solid var(--accent-blue);
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+        
+        .message-sender {
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+        
+        .system-message .message-sender {
+            color: var(--secondary-blue);
+        }
+        
+        .message-time {
+            color: #666;
+            font-size: 0.8rem;
+        }
+        
+        .message-content {
+            font-size: 0.95rem;
+        }
+        
+        /* === INPUT AREA === */
+        .input-area {
+            padding: 18px 20px;
+            border-top: 2px solid var(--light-blue);
+            background: white;
+            display: flex;
+            gap: 12px;
+        }
+        
+        #message-input {
+            flex: 1;
+            padding: 14px 18px;
+            background: white;
+            border: 2px solid var(--light-blue);
+            border-radius: 10px;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        
+        #message-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.2);
+        }
+        
+        .input-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-btn {
+            padding: 14px;
+            background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--primary-blue) 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+            box-shadow: 0 3px 6px rgba(13, 71, 161, 0.2);
+        }
+        
+        .input-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(13, 71, 161, 0.3);
+        }
+        
+        #send-btn {
+            background: linear-gradient(135deg, var(--success-green) 0%, #1b5e20 100%);
+        }
+        
+        #handsfree-btn {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, #1e88e5 100%);
+        }
+        
+        #handsfree-btn.handsfree-active {
+            background: linear-gradient(135deg, var(--warning-orange) 0%, #e65100 100%);
+            animation: pulse-handsfree 2s infinite;
+        }
+        
+        /* === RIGHT PANEL: VISUAL GUIDE === */
+        .guide-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: linear-gradient(to bottom, #fafafa, #f5f5f5);
+        }
+        
+        .guide-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--light-blue);
+        }
+        
+        .guide-step {
+            background: white;
+            margin-bottom: 18px;
+            padding: 18px;
+            border-radius: 10px;
+            border-left: 4px solid var(--accent-blue);
+            border-top: 1px solid var(--light-blue);
+            border-right: 1px solid var(--light-blue);
+            border-bottom: 1px solid var(--light-blue);
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .guide-step:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .step-number {
+            background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--primary-blue) 100%);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(13, 71, 161, 0.3);
+        }
+        
+        .step-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1rem;
+        }
+        
+        .step-image {
+            width: 100%;
+            border-radius: 8px;
+            margin: 12px 0;
+            border: 2px solid var(--light-blue);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .step-description {
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        /* === HANDSFREE MODE STYLES === */
+        .handsfree-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(13, 71, 161, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .handsfree-listening {
+            text-align: center;
+            color: white;
+            max-width: 400px;
+            padding: 30px;
+        }
+        
+        .handsfree-pulse {
+            width: 120px;
+            height: 120px;
+            background: rgba(66, 165, 245, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            animation: pulse-large 1.5s infinite;
+        }
+        
+        .handsfree-pulse-inner {
+            width: 80px;
+            height: 80px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+        }
+        
+        .handsfree-instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .handsfree-instructions h4 {
+            margin-bottom: 10px;
+            color: var(--light-blue);
+        }
+        
+        .close-handsfree {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--danger-red);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 10001;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        .close-handsfree:hover {
+            background: #b71c1c;
+        }
+        
+        /* === ANIMATIONS === */
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse-handsfree {
+            0% { box-shadow: 0 0 0 0 rgba(245, 124, 0, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(245, 124, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 124, 0, 0); }
+        }
+        
+        @keyframes pulse-large {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(66, 165, 245, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(66, 165, 245, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(66, 165, 245, 0); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* === SCROLLBAR === */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--light-blue);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-blue);
+        }
+        
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .dashboard {
+                gap: 12px;
+            }
+            
+            .header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .input-buttons {
+                flex-wrap: wrap;
+            }
+            
+            .input-btn {
+                padding: 12px;
+                min-width: 45px;
+            }
+            
+            .camera-panel, .chat-panel, .guide-panel {
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- SIMPLE HEADER -->
+    <div class="header">
+        <h1><i class="fas fa-ambulance"></i> Neonexus First Responder</h1>
+    </div>
+    
+    <!-- MAIN DASHBOARD WITH CORRECT LAYOUT -->
+    <div class="dashboard">
+        <!-- LEFT PANEL: CAMERA FEED -->
+        <div class="camera-panel">
+            <div class="camera-header">
+                <h3><i class="fas fa-video"></i> Live Camera Feed</h3>
+                <button class="close-camera" id="close-camera" title="Toggle Camera">✕</button>
+            </div>
+            <div class="camera-feed" id="camera-feed">
+                <div class="camera-placeholder" id="camera-placeholder">
+                    <i class="fas fa-video-slash"></i>
+                    <p>Camera feed will appear here</p>
+                    <p style="font-size: 0.85rem; margin-top: 5px;">Camera auto-starts in 2 seconds</p>
+                </div>
+                <video id="live-camera" autoplay playsinline muted></video>
+            </div>
+        </div>
+        
+        <!-- CENTER PANEL: CHAT -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <h3><i class="fas fa-comments"></i> Emergency Chat</h3>
+            </div>
+            <div class="chat-history" id="chat-history">
+                <div class="message-container">
+                    <!-- Messages will appear here -->
+                </div>
+            </div>
+            
+            <!-- INPUT AREA -->
+            <div class="input-area">
+                <input type="text" id="message-input" placeholder="Type or speak your emergency...">
+                <div class="input-buttons">
+                    <!-- Handsfree mode toggle button -->
+                    <button class="input-btn" id="handsfree-btn" title="Toggle Handsfree Mode">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <!-- Send button -->
+                    <button class="input-btn" id="send-btn" title="Send Message">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- RIGHT PANEL: VISUAL GUIDE -->
+        <div class="guide-panel">
+            <div class="guide-header">
+                <h3><i class="fas fa-map-signs"></i> Visual Guidance</h3>
+            </div>
+            <div class="guide-content" id="guide-content">
+                <!-- Guide steps will appear here dynamically -->
+                <div class="guide-title">Emergency Visual Guide</div>
+                <div class="guide-step">
+                    <div class="step-header">
+                        <span class="step-number">1</span>
+                        <span class="step-title">Emergency Ready</span>
+                    </div>
+                    <img src="/static/images/person calling emergencyy.jpg" alt="Emergency Call" class="step-image">
+                    <div class="step-description">Always call 108/112 for emergencies. Provide clear location and situation details.</div>
+                </div>
+                <div class="guide-step">
+                    <div class="step-header">
+                        <span class="step-number">2</span>
+                        <span class="step-title">First Aid Knowledge</span>
+                    </div>
+                    <img src="/static/images/cpr being performed.jpg" alt="CPR" class="step-image">
+                    <div class="step-description">Basic first aid knowledge saves lives. Learn CPR and emergency protocols.</div>
+                </div>
+                <div class="guide-step">
+                    <div class="step-header">
+                        <span class="step-number">3</span>
+                        <span class="step-title">Safety First</span>
+                    </div>
+                    <img src="/static/images/recovery position.jpg" alt="Safety" class="step-image">
+                    <div class="step-description">Ensure scene safety before providing aid. Protect yourself and the victim.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Files - CORRECT ORDER -->
+    <script>
+        // Request microphone permission on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(function(stream) {
+                        console.log('✅ Microphone permission granted');
+                        stream.getTracks().forEach(track => track.stop());
+                    })
+                    .catch(function(err) {
+                        console.log('⚠️ Microphone permission not granted:', err);
+                    });
+            }
+        });
+    </script>
+    
+   <!-- JavaScript Files -->
+<!-- In index.html head section -->
+<script src="/static/js/face-api.min.js"></script>
+<script src="/static/js/emergency-images.js"></script>
+<script src="/static/js/camera.js"></script>
+<script src="/static/js/main.js"></script>
+    <!-- DEBUG SCRIPT -->
+    <script>
+        console.log('🔵 Page loaded, checking files...');
+        
+        // Test if files exist
+        setTimeout(() => {
+            console.log('📁 Checking AI files:');
+            console.log('face-api loaded:', typeof faceapi !== 'undefined');
+            console.log('CameraSystem loaded:', typeof CameraSystem !== 'undefined');
+            console.log('emergencyApp loaded:', typeof emergencyApp !== 'undefined');
+        }, 2000);
+    </script>
+</body>
+</html>
